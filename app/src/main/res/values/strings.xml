@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Film Gallery</string>
+    <string name="empty_message">No films to display!</string>
+    <string name="favourites_on">Show all</string>
+    <string name="favourites_off">Show favourites</string>
+    <string name="search_on">Show all categories</string>
+    <string name="search_off">Search by category</string>
+    <string name="search_title">Choose the category</string>
+</resources>
