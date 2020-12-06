@@ -3,10 +3,10 @@ package com.drozdztomasz.filmgallery.ui.list
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.drozdztomasz.filmgallery.data.Film
 import com.drozdztomasz.filmgallery.data.FilmData
-import com.drozdztomasz.filmgallery.ui.list.film.Film
 
-class ListViewModel() : ViewModel() {
+class ListViewModel : ViewModel() {
 
     var favourite: Boolean = false
         set(value) {
@@ -14,30 +14,40 @@ class ListViewModel() : ViewModel() {
             filter()
         }
 
-    var category: Film.Companion.CATEGORY? = null
+    var genre: Film.Companion.GENRE? = null
         set(value) {
             field = value
             filter()
         }
 
     private val _films: MutableList<Film> = FilmData.getFilms()
-    private val _filmsData = MutableLiveData<List<Film>>()
+    private var currentIndices: List<Int> = _films.indices.toList()
+    private val filmsData = MutableLiveData<List<Film>>()
     val films: LiveData<List<Film>>
-        get() = _filmsData
+        get() = filmsData
 
     init {
-        _filmsData.value = _films.toList()
+        filmsData.value = _films.toList()
     }
 
     fun removeFilm(pos: Int) {
-        _films.removeAt(pos)
+        _films.removeAt(currentIndices[pos])
         filter()
     }
 
     private fun filter() {
-        var list: List<Film> = _films
-        if (favourite) list = list.filter { film -> film.favourite }
-        category?.let { list = list.filter { film -> film.category == category } }
-        _filmsData.value = list
+        if (!favourite && genre == null) {
+            filmsData.value = _films.toList()
+            currentIndices = _films.indices.toList()
+            return
+        }
+
+        var indexedValues = _films.zip(_films.indices)
+        if (favourite) indexedValues = indexedValues.filter { it.first.favourite }
+        genre?.let { indexedValues = indexedValues.filter { it.first.genre == genre } }
+
+        val lists = indexedValues.unzip()
+        filmsData.value = lists.first
+        currentIndices = lists.second
     }
 }

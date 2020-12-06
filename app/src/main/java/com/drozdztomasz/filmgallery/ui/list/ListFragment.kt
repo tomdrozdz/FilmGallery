@@ -1,31 +1,26 @@
 package com.drozdztomasz.filmgallery.ui.list
 
 import android.app.AlertDialog
-import android.content.DialogInterface
 import android.os.Bundle
 import android.view.*
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.drozdztomasz.filmgallery.R
+import com.drozdztomasz.filmgallery.data.Film
 import com.drozdztomasz.filmgallery.databinding.ListFragmentBinding
-import com.drozdztomasz.filmgallery.ui.list.film.Film
-import com.drozdztomasz.filmgallery.ui.list.film.FilmAdapter
-import com.drozdztomasz.filmgallery.ui.list.film.SwipeToDeleteCallback
+import com.drozdztomasz.filmgallery.ui.list.film_adapter.FilmAdapter
+import com.drozdztomasz.filmgallery.ui.list.film_adapter.SwipeToDeleteCallback
 
 class ListFragment : Fragment() {
     private lateinit var binding: ListFragmentBinding
-
-    private lateinit var viewModel: ListViewModel
-    private lateinit var viewAdapter: RecyclerView.Adapter<*>
-    private lateinit var viewManager: RecyclerView.LayoutManager
+    private val viewModel: ListViewModel by viewModels()
 
     private lateinit var searchButton: MenuItem
-    private val categories: Array<Film.Companion.CATEGORY> = Film.Companion.CATEGORY.values()
-
+    private lateinit var categories: List<Film.Companion.GENRE>
+    private lateinit var categoriesStrings: Array<String>
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -33,15 +28,12 @@ class ListFragment : Fragment() {
     ): View {
         binding = ListFragmentBinding.inflate(layoutInflater)
 
-        viewModel = ViewModelProvider(this).get(ListViewModel::class.java)
-        viewManager = LinearLayoutManager(context)
-        viewAdapter = FilmAdapter(viewModel.films)
-
-        binding.recyclerView.layoutManager = viewManager
-        binding.recyclerView.adapter = viewAdapter
+        binding.recyclerView.layoutManager = LinearLayoutManager(context)
+        binding.recyclerView.adapter = FilmAdapter(viewModel.films)
 
         observeLiveData()
         attachDeleteHelper()
+        loadCategories()
 
         return binding.root
     }
@@ -74,6 +66,11 @@ class ListFragment : Fragment() {
         itemTouchHelper.attachToRecyclerView(binding.recyclerView)
     }
 
+    private fun loadCategories() {
+        categories = Film.Companion.GENRE.values().sortedBy { resources.getString(it.stringId) }
+        categoriesStrings = categories.map { resources.getString(it.stringId) }.toTypedArray()
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         setHasOptionsMenu(true)
         super.onViewCreated(view, savedInstanceState)
@@ -101,14 +98,13 @@ class ListFragment : Fragment() {
 
     private fun onFavourite(item: MenuItem) {
         viewModel.favourite = !viewModel.favourite
-        var buttonIcon: Int
-        var buttonString: Int
+        val buttonIcon: Int
+        val buttonString: Int
 
         if (viewModel.favourite) {
             buttonIcon = R.drawable.favourites_on
             buttonString = R.string.favourites_on
-        }
-        else {
+        } else {
             buttonIcon = R.drawable.favourites_off
             buttonString = R.string.favourites_off
         }
@@ -118,29 +114,27 @@ class ListFragment : Fragment() {
     }
 
     private fun onFilter() {
-        if (viewModel.category == null) {
-            showCategoryDialog()
-        }
-        else {
-            viewModel.category = null
+        if (viewModel.genre == null) {
+            showGenreDialog()
+        } else {
+            viewModel.genre = null
             searchButton.setIcon(R.drawable.search_off)
             searchButton.setTitle(R.string.search_off)
         }
     }
 
-    private fun showCategoryDialog() {
+    private fun showGenreDialog() {
         val builder = AlertDialog.Builder(context)
-        val arr = arrayOf("Comedy", "String")
         builder.setTitle(resources.getString(R.string.search_title))
-        builder.setItems(arr) { dialog, which ->
-            viewModel.category = Film.Companion.CATEGORY.COMEDY
+        builder.setItems(categoriesStrings) { _, which ->
+            viewModel.genre = categories[which]
             updateSearchButton()
         }
         builder.show()
     }
 
     private fun updateSearchButton() {
-        if (viewModel.category != null) {
+        if (viewModel.genre != null) {
             searchButton.setIcon(R.drawable.search_on)
             searchButton.setTitle(R.string.search_on)
         }

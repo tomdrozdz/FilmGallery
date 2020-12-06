@@ -1,15 +1,18 @@
-package com.drozdztomasz.filmgallery.ui.list.film
+package com.drozdztomasz.filmgallery.ui.list.film_adapter
 
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LiveData
+import androidx.navigation.findNavController
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.drozdztomasz.filmgallery.R
+import com.drozdztomasz.filmgallery.data.Film
 import com.drozdztomasz.filmgallery.databinding.FilmEntryBinding
+import com.drozdztomasz.filmgallery.ui.list.ListFragmentDirections
 
 class FilmAdapter(private val films: LiveData<List<Film>>) :
     ListAdapter<Film, FilmAdapter.ViewHolder>(DiffCallback()) {
@@ -18,13 +21,21 @@ class FilmAdapter(private val films: LiveData<List<Film>>) :
         RecyclerView.ViewHolder(binding.root) {
         fun bind(film: Film) {
             binding.apply {
-                nameTv.text = film.name
+                nameTv.text = context.getString(film.title)
                 setButton(film)
+
+                genreTv.text = context.getString(film.genre.stringId)
+                posterIv.setImageDrawable(context.getDrawable(film.poster))
 
                 favouriteBtn.setOnClickListener {
                     film.favourite = !film.favourite
                     setButton(film)
                 }
+            }
+
+            this.itemView.setOnClickListener { v ->
+                val action = ListFragmentDirections.actionListFragmentToDetailsActivity(film)
+                v.findNavController().navigate(action)
             }
         }
 

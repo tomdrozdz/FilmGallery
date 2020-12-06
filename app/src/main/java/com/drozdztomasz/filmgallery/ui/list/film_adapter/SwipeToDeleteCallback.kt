@@ -1,4 +1,4 @@
-package com.drozdztomasz.filmgallery.ui.list.film
+package com.drozdztomasz.filmgallery.ui.list.film_adapter
 
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
